@@ -8,11 +8,12 @@ CC = clang
 LD = clang
 
 CFLAGS =  -std=c11 -Wall -pedantic -Isrc
+CFLAGS += -Ideps/json-c -Ideps/build/json-c
 
 CFLAGS_DEB = -O0 -g -gdwarf-4
 CFLAGS_REL = -O3
 
-LDFLAGS =
+LDFLAGS = -L./deps/build/json-c/ -ljson-c -lm
 
 rwildcard = $(foreach d, $(wildcard $1*), $(call rwildcard, $d/, $2) $(filter $(subst *, %, $2), $d))
 
@@ -52,3 +53,12 @@ run: debug
 clean:
 	@ echo -e "$(YELLOW)CLEANING PROJECT$(NC)"
 	@ rm -rf build
+
+deps:
+	@ echo -e "$(CYAN)UPDATING SUBMODULES$(NC)"        && git submodule update --init --recursive --depth=1
+	@ echo -e "$(BLUE)BUILDING DEPENDENCY$(NC) json-c" && cd deps && mkdir -p build/json-c && cd build/json-c && \
+	cmake ../../json-c && cmake --build . --config Release && make -j4
+
+depsclean:
+	@ echo -e "$(YELLOW)CLEANING DEPENDENCIES$(NC)"
+	@ rm -rf deps/build

@@ -1,0 +1,5 @@
+{
+	"currency": "euro",
+	"amount": 30,
+	"things": ["one", "two", "three"]
+}
