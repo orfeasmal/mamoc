@@ -10,10 +10,12 @@ LD = clang
 CFLAGS =  -std=c11 -Wall -pedantic -Isrc
 CFLAGS += -Ideps/json-c -Ideps/build/json-c
 
-CFLAGS_DEB = -O0 -g -gdwarf-4
+CFLAGS_DEB = -O0 -g -gdwarf-4 -fsanitize=address
 CFLAGS_REL = -O3
 
 LDFLAGS = -L./deps/build/json-c/ -ljson-c -lm
+
+LDFLAGS_DEB = -fsanitize=address
 
 rwildcard = $(foreach d, $(wildcard $1*), $(call rwildcard, $d/, $2) $(filter $(subst *, %, $2), $d))
 
@@ -30,7 +32,7 @@ EXE_DEB = build/debug/mamoc
 
 debug: $(OBJ_DEB)
 	@ echo -e "$(GREEN)LINKING EXECUTABLE$(NC) $(EXE_DEB)"
-	@ $(LD) $(OBJ_DEB) -o $(EXE_DEB) $(LDFLAGS)
+	@ $(LD) $(OBJ_DEB) -o $(EXE_DEB) $(LDFLAGS) $(LDFLAGS_DEB)
 
 release: $(OBJ_REL)
 	@ echo -e "$(GREEN)LINKING EXECUTABLE$(NC) $(EXE_REL)"
