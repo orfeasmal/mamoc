@@ -3,8 +3,11 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
-#define CATEGORY_SIZE 1024
+#include <json.h>
+
+#define ENTRY_CATEGORY_MAX_LEN 1024
 
 typedef enum {
 	ENTRY_EXPENSE,
@@ -14,9 +17,20 @@ typedef enum {
 typedef struct {
 	double amount;
 	EntryType type;
-	int32_t year;
+	uint32_t year;
 	uint8_t day, month;
-	char category[CATEGORY_SIZE];
+	char category[ENTRY_CATEGORY_MAX_LEN + 1];
 } Entry;
+
+typedef struct {
+	Entry *data;
+	size_t size;
+	size_t count;
+	bool sorted;
+} EntryArray;
+
+EntryArray entry_array_create(size_t initial_size);
+void entry_array_add(EntryArray *array, Entry entry);
+void entry_array_destroy(EntryArray *array);
 
 #endif
