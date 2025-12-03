@@ -77,7 +77,13 @@ int main(int argc, char **argv)
 			}
 			const int32_t day = json_object_get_int(json_temp);
 
-			if (!util_is_date_valid(year, month, day)) {
+			const Date date = {
+				.y = year,
+				.m = month,
+				.d = day
+			};
+
+			if (!util_date_is_valid(date)) {
 				fprintf(stderr, "error: invalid date in entry index %u of the json array\n", i);
 				return 1;
 			}
@@ -85,9 +91,7 @@ int main(int argc, char **argv)
 			new_entry = (Entry) {
 				.type = type,
 				.amount = amount,
-				.year = year,
-				.month = month,
-				.day = day
+				.date = date
 			};
 			strncpy(new_entry.category, category, ENTRY_CATEGORY_MAX_LEN);
 
@@ -121,14 +125,14 @@ int main(int argc, char **argv)
 			if (entries.count == 0)
 				printf("No entries!\n");
 
-			for (int i = 0; i < entries.count; ++i) {
+			for (uint32_t i = 0; i < entries.count; ++i) {
 				Entry temp = entries.data[i];
 				printf("-----------------------\n");
 				printf("ENTRY %d\n", i + 1);
 				printf("Type: %d\n", temp.type);
 				printf("Category: %s\n", temp.category);
 				printf("Amount: %.2lf\n", temp.amount);
-				printf("Date: %d %d %d\n", temp.year, temp.month, temp.day);
+				printf("Date: %d %d %d\n", temp.date.y, temp.date.m, temp.date.d);
 				printf("-----------------------\n");
 			}
 
@@ -157,7 +161,7 @@ int main(int argc, char **argv)
 			util_user_input(input_buffer, input_buffer_size);
 		} while (strcmp(input_buffer, "") == 0);
 
-		strcpy(new_entry.category, input_buffer); // unsafe??
+		strncpy(new_entry.category, input_buffer, ENTRY_CATEGORY_MAX_LEN); // unsafe??
 
 		do {
 			printf("Enter the amount: ");
@@ -179,15 +183,18 @@ int main(int argc, char **argv)
 				continue;
 			}
 
-			new_entry.year = atoi(year);
-			new_entry.month = abs(atoi(month));
-			new_entry.day = abs(atoi(day));
+			Date date = {
+				.y = atoi(year),
+				.m = atoi(month),
+				.d = atoi(day)
+			};
 
-			if (!util_is_date_valid(new_entry.year, new_entry.month, new_entry.day)) {
+			if (!util_date_is_valid(date)) {
 				fprintf(stderr, "Please enter a valid date\n");
 				strcpy(input_buffer, "");
 				continue;
 			}
+			new_entry.date = date;
 		} while (strcmp(input_buffer, "") == 0);
 
 		entry_array_add(&entries, new_entry);

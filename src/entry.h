@@ -7,6 +7,8 @@
 
 #include <json.h>
 
+#include "util.h"
+
 #define ENTRY_CATEGORY_MAX_LEN 1024
 
 typedef enum {
@@ -17,8 +19,7 @@ typedef enum {
 typedef struct {
 	double amount;
 	EntryType type;
-	uint32_t year;
-	uint8_t day, month;
+	Date date;
 	char category[ENTRY_CATEGORY_MAX_LEN + 1];
 } Entry;
 
@@ -26,11 +27,11 @@ typedef struct {
 	Entry *data;
 	size_t size;
 	size_t count;
-	bool sorted;
-} EntryArray;
+} EntryArray; // always sorted by date
 
 EntryArray entry_array_create(size_t initial_size);
-void entry_array_add(EntryArray *array, Entry entry);
+void entry_array_add(EntryArray *array, Entry entry); // automatically sorts
+void entry_array_remove(EntryArray *array, uint32_t index);
 void entry_array_destroy(EntryArray *array);
 
 #endif

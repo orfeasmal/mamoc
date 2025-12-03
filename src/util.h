@@ -5,13 +5,18 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// #define UTIL_FILE_WRITE_SUCCESS 1
-// #define UTIL_FILE_WRITE_FAILURE 0
-
-// char *util_file_read(const char *name); // returns malloc'd buffer, returns null if failed
-// uint8_t util_file_write(const char *name, const char *src); // returns success code
-
 void util_user_input(char *buffer, size_t max_length);
-bool util_is_date_valid(int32_t year, int32_t month, int32_t day);
+
+typedef struct {
+	int32_t y, m, d;
+} Date;
+
+bool util_date_is_valid(Date date);
+
+#define UTIL_DATE_1_GREATER 0
+#define UTIL_DATE_1_LESSER  1
+#define UTIL_DATES_EQUAL    2
+
+uint8_t util_date_compare(Date date1, Date date2); // assumes date is valid
 
 #endif 
