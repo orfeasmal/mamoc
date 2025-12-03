@@ -36,8 +36,14 @@ bool util_date_is_valid(Date date)
 				return false;
 			break;
 		case 2:
-			if (date.d > 28 && !(date.y % 4 == 0 && date.d == 29))
-				return false;
+			if (date.y % 4 == 0) {
+				if (date.d > 29)
+					return false;
+			}
+			else {
+				if (date.d > 28)
+					return false;
+			}
 			break;
 		default: 
 			return false;
