@@ -35,16 +35,16 @@ void entry_array_add(EntryArray *array, Entry entry)
 	++array->count;
 }
 
-void entry_array_remove(EntryArray *array, uint32_t i)
+uint8_t entry_array_remove(EntryArray *array, uint32_t i)
 {
-	if (i >= array->count) {
-		fprintf(stderr, "internal error: entry_array_remove: there is no entry with index %u in the entry array\n", i);
-		return;
-	}
+	if (i >= array->count)
+		return ENTRY_ARRAY_OPERATION_FAILURE;
 	else if (i < array->count - 1)
-		memmove(&array->data[i], &array->data[i + 1], array->count - i - 1); // might be wrong
+		memmove(&array->data[i], &array->data[i + 1], array->count - i - 1);
 
 	--array->count;
+
+	return ENTRY_ARRAY_OPERATION_SUCCESS;
 }
 
 void entry_array_destroy(EntryArray *array)
@@ -69,35 +69,8 @@ uint8_t entry_array_get_from_json_file(EntryArray *array, const char *file_name)
 		json_object *json_temp;
 
 		new_entry = (Entry) { 0 };
-		
-		if (!json_object_object_get_ex(json_entry, "type", &json_temp)) {
-			fprintf(stderr, "error: missing type value in entry index %u of the json array\n", i);
-			exit(EXIT_FAILURE);
-		}
 
-		const int32_t type = json_object_get_int(json_temp);
-		if (type != 0 && type != 1) {
-			fprintf(stderr, "error: invalid type value in entry index %u of the json array (must be 0 or 1)\n", i);
-			exit(EXIT_FAILURE);
-		}
-
-		if (!json_object_object_get_ex(json_entry, "category", &json_temp)) {
-			fprintf(stderr, "error: missing category value in entry index %u of the json array\n", i);
-			exit(EXIT_FAILURE);
-		}
-
-		const char * const category = json_object_get_string(json_temp);
-		if (strlen(category) > ENTRY_CATEGORY_MAX_LEN) {
-			fprintf(stderr, "error: category string length too large in entry index %u of the json_array\n", i);
-			exit(EXIT_FAILURE);
-		}
-
-		if (!json_object_object_get_ex(json_entry, "amount", &json_temp)) {
-			fprintf(stderr, "error: missing amount value in entry index %u of the json array\n", i);
-			exit(EXIT_FAILURE);
-		}
-		const double amount = json_object_get_double(json_temp);
-
+		// Date
 		if (!json_object_object_get_ex(json_entry, "year", &json_temp)) {
 			fprintf(stderr, "error: missing year value in entry index %u of the json array\n", i);
 			exit(EXIT_FAILURE);
@@ -126,6 +99,37 @@ uint8_t entry_array_get_from_json_file(EntryArray *array, const char *file_name)
 			fprintf(stderr, "error: invalid date in entry index %u of the json array\n", i);
 			exit(EXIT_FAILURE);
 		}
+		
+		// Type
+		if (!json_object_object_get_ex(json_entry, "type", &json_temp)) {
+			fprintf(stderr, "error: missing type value in entry index %u of the json array\n", i);
+			exit(EXIT_FAILURE);
+		}
+
+		const int32_t type = json_object_get_int(json_temp);
+		if (type != 0 && type != 1) {
+			fprintf(stderr, "error: invalid type value in entry index %u of the json array (must be 0 or 1)\n", i);
+			exit(EXIT_FAILURE);
+		}
+
+		// Category
+		if (!json_object_object_get_ex(json_entry, "category", &json_temp)) {
+			fprintf(stderr, "error: missing category value in entry index %u of the json array\n", i);
+			exit(EXIT_FAILURE);
+		}
+
+		const char * const category = json_object_get_string(json_temp);
+		if (strlen(category) > ENTRY_CATEGORY_MAX_LEN) {
+			fprintf(stderr, "error: category string length too large in entry index %u of the json_array\n", i);
+			exit(EXIT_FAILURE);
+		}
+
+		// Amount
+		if (!json_object_object_get_ex(json_entry, "amount", &json_temp)) {
+			fprintf(stderr, "error: missing amount value in entry index %u of the json array\n", i);
+			exit(EXIT_FAILURE);
+		}
+		const double amount = json_object_get_double(json_temp);
 
 		new_entry = (Entry) {
 			.type = type,
@@ -139,7 +143,7 @@ uint8_t entry_array_get_from_json_file(EntryArray *array, const char *file_name)
 
 	json_object_put(json);
 
-	return ENTRY_ARRAY_JSON_SUCCESS;
+	return ENTRY_ARRAY_OPERATION_SUCCESS;
 }
 
 uint8_t entry_array_to_json_file(const EntryArray *array, const char *file_name)
@@ -150,22 +154,22 @@ uint8_t entry_array_to_json_file(const EntryArray *array, const char *file_name)
 		Entry entry = array->data[i];
 		json_object *temp = json_object_new_object();
 
-		json_object_object_add(temp, "type",     json_object_new_int(entry.type));
-		json_object_object_add(temp, "category", json_object_new_string(entry.category));
-		json_object_object_add(temp, "amount",   json_object_new_double(entry.amount));
 		json_object_object_add(temp, "year",     json_object_new_int(entry.date.y));
 		json_object_object_add(temp, "month",    json_object_new_int(entry.date.m));
 		json_object_object_add(temp, "day",      json_object_new_int(entry.date.d));
+		json_object_object_add(temp, "type",     json_object_new_int(entry.type));
+		json_object_object_add(temp, "category", json_object_new_string(entry.category));
+		json_object_object_add(temp, "amount",   json_object_new_double(entry.amount));
 
 		json_object_array_add(json_array_object, temp);
 	}
 
 	if (json_object_to_file_ext(file_name, json_array_object, JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_PRETTY_TAB) == -1) {
 		fprintf(stderr, "json error: %s\n", json_util_get_last_err());
-		return ENTRY_ARRAY_JSON_FAILURE;
+		return ENTRY_ARRAY_OPERATION_FAILURE;
 	}
 
 	json_object_put(json_array_object);
 
-	return ENTRY_ARRAY_JSON_SUCCESS;
+	return ENTRY_ARRAY_OPERATION_SUCCESS;
 }

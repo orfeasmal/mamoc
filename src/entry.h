@@ -11,6 +11,9 @@
 
 #define ENTRY_CATEGORY_MAX_LEN 1024
 
+#define ENTRY_ARRAY_OPERATION_SUCCESS 1
+#define ENTRY_ARRAY_OPERATION_FAILURE 0
+
 typedef enum {
 	ENTRY_EXPENSE,
 	ENTRY_INCOME
@@ -31,11 +34,8 @@ typedef struct {
 
 EntryArray entry_array_create(size_t initial_size);
 void       entry_array_add(EntryArray *array, Entry entry); // automatically sorts
-void       entry_array_remove(EntryArray *array, uint32_t index);
+uint8_t    entry_array_remove(EntryArray *array, uint32_t i);
 void       entry_array_destroy(EntryArray *array);
-
-#define ENTRY_ARRAY_JSON_SUCCESS 1
-#define ENTRY_ARRAY_JSON_FAILURE 0
 
 uint8_t entry_array_get_from_json_file(EntryArray *dest, const char *file_name); // assumes entry array is initialised
 uint8_t entry_array_to_json_file(const EntryArray *array, const char *file_name);
