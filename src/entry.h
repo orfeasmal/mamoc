@@ -32,12 +32,25 @@ typedef struct {
 	size_t count;
 } EntryArray; // always sorted by date
 
+typedef enum {
+	ENTRY_COMPONENT_START = 0,
+
+	ENTRY_COMPONENT_DATE,
+	ENTRY_COMPONENT_TYPE,
+	ENTRY_COMPONENT_CATEGORY,
+	ENTRY_COMPONENT_AMOUNT,
+
+	ENTRY_COMPONENT_END
+} EntryTypeOfComponent;
+
 EntryArray entry_array_create(size_t initial_size);
 void       entry_array_add(EntryArray *array, Entry entry); // automatically sorts
 uint8_t    entry_array_remove(EntryArray *array, uint32_t i);
 void       entry_array_destroy(EntryArray *array);
 
-uint8_t entry_array_get_from_json_file(EntryArray *dest, const char *file_name); // assumes entry array is initialised
-uint8_t entry_array_to_json_file(const EntryArray *array, const char *file_name);
+int32_t entry_array_get_from_json_file(EntryArray *dest, const char *file_name); // assumes entry array is initialised
+int32_t entry_array_to_json_file(const EntryArray *array, const char *file_name);
+
+void entry_print(const Entry *entry);
 
 #endif

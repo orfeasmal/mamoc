@@ -4,12 +4,16 @@
 
 #include "util.h"
 
-void util_user_input(char *buffer, size_t buffer_size)
+size_t util_user_input(char *buffer, size_t buffer_size)
 {
 	while (fgets(buffer, buffer_size, stdin) == NULL)
 		fprintf(stderr, "error: fgets failed, trying again\n");
 
-	buffer[strcspn(buffer, "\n")] = 0;
+	const size_t newline_index = strcspn(buffer, "\n");
+
+	buffer[newline_index] = 0;
+
+	return newline_index;
 }
 
 bool util_date_is_valid(Date date)
@@ -52,7 +56,7 @@ bool util_date_is_valid(Date date)
 	return true;
 }
 
-uint8_t util_date_compare(Date date1, Date date2) // assumes date is valid
+DateComparison util_date_compare(Date date1, Date date2)
 {
 	if (date1.y < date2.y)
 		return UTIL_DATE_1_LESSER;

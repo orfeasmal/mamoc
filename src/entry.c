@@ -24,7 +24,7 @@ void entry_array_add(EntryArray *array, Entry entry)
 
 	uint32_t i;
 	for (i = 0; i < array->count; ++i) {
-	  	const uint8_t date_comparison = util_date_compare(array->data[i].date, entry.date);
+	  	const DateComparison date_comparison = util_date_compare(array->data[i].date, entry.date);
 		if (date_comparison == UTIL_DATE_1_GREATER) {
 			memmove(&array->data[i + 1], &array->data[i], (array->count - i) * (sizeof *array->data));
 			break;
@@ -52,7 +52,7 @@ void entry_array_destroy(EntryArray *array)
 	free(array->data);
 }
 
-uint8_t entry_array_get_from_json_file(EntryArray *array, const char *file_name)
+int32_t entry_array_get_from_json_file(EntryArray *array, const char *file_name)
 {
 	*array = entry_array_create(1);
 	Entry new_entry;
@@ -146,7 +146,7 @@ uint8_t entry_array_get_from_json_file(EntryArray *array, const char *file_name)
 	return ENTRY_ARRAY_OPERATION_SUCCESS;
 }
 
-uint8_t entry_array_to_json_file(const EntryArray *array, const char *file_name)
+int32_t entry_array_to_json_file(const EntryArray *array, const char *file_name)
 {
 	json_object *json_array_object = json_object_new_array();
 
@@ -172,4 +172,14 @@ uint8_t entry_array_to_json_file(const EntryArray *array, const char *file_name)
 	json_object_put(json_array_object);
 
 	return ENTRY_ARRAY_OPERATION_SUCCESS;
+}
+
+void entry_print(const Entry *entry)
+{
+	printf("-----------------------------\n");
+	printf("1. Date: %d-%d-%d\n", entry->date.y, entry->date.m, entry->date.d);
+	printf("2. Type: %d\n",       entry->type);
+	printf("3. Category: %s\n",   entry->category);
+	printf("4. Amount: %.2lf\n",  entry->amount);
+	printf("-----------------------------\n");
 }
