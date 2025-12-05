@@ -22,7 +22,7 @@ void entry_array_add(EntryArray *array, Entry entry)
 	if (array->count == array->size)
 		array->data = realloc(array->data, (array->size *= 2) * (sizeof *array->data)); 
 
-	uint32_t i;
+	size_t i;
 	for (i = 0; i < array->count; ++i) {
 	  	const DateComparison date_comparison = util_date_compare(array->data[i].date, entry.date);
 		if (date_comparison == UTIL_DATE_1_GREATER) {
@@ -35,12 +35,12 @@ void entry_array_add(EntryArray *array, Entry entry)
 	++array->count;
 }
 
-uint8_t entry_array_remove(EntryArray *array, uint32_t i)
+uint8_t entry_array_remove(EntryArray *array, size_t i)
 {
 	if (i >= array->count)
 		return ENTRY_ARRAY_OPERATION_FAILURE;
 	else if (i < array->count - 1)
-		memmove(&array->data[i], &array->data[i + 1], array->count - i - 1);
+		memmove(&array->data[i], &array->data[i + 1], (array->count - i - 1) * (sizeof *array->data));
 
 	--array->count;
 
@@ -178,7 +178,12 @@ void entry_print(const Entry *entry)
 {
 	printf("-----------------------------\n");
 	printf("1. Date: %d-%d-%d\n", entry->date.y, entry->date.m, entry->date.d);
-	printf("2. Type: %d\n",       entry->type);
+
+	if (entry->type == ENTRY_EXPENSE)
+		printf("2. Type: Expense\n");
+	else if (entry->type == ENTRY_INCOME)
+		printf("2. Type: Income\n");
+
 	printf("3. Category: %s\n",   entry->category);
 	printf("4. Amount: %.2lf\n",  entry->amount);
 	printf("-----------------------------\n");

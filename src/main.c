@@ -84,8 +84,8 @@ int main(int argc, char **argv)
 					if (entries.count == 0)
 						printf("No entries!\n");
 
-					for (uint32_t i = 0; i < entries.count; ++i) {
-						printf("ENTRY %d\n", i);
+					for (size_t i = 0; i < entries.count; ++i) {
+						printf("ENTRY %lu\n", i);
 						entry_print(&entries.data[i]);
 					}
 					break;

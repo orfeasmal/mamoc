@@ -45,7 +45,7 @@ typedef enum {
 
 EntryArray entry_array_create(size_t initial_size);
 void       entry_array_add(EntryArray *array, Entry entry); // automatically sorts
-uint8_t    entry_array_remove(EntryArray *array, uint32_t i);
+uint8_t    entry_array_remove(EntryArray *array, size_t i);
 void       entry_array_destroy(EntryArray *array);
 
 int32_t entry_array_get_from_json_file(EntryArray *dest, const char *file_name); // assumes entry array is initialised
