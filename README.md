@@ -9,12 +9,13 @@ $ git clone https://github.com/orfeasmal/mamoc --recurse-submodules && cd mamoc
 for debug
 
 ```
-$ make deps run
+$ make deps
+$ ./build/debug/mamoc <optional config file>
 ```
 
 for release
 
 ```
 $ make deps release
-$ ./build/release/mamoc
+$ ./build/release/mamoc <optional config file>
 ```

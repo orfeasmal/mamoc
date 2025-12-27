@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define JSIMPLON_IMPLEMENTATION
+#include <jsimplon.h>
+
 #include "entry.h"
-#include "json_object.h"
-#include "json_util.h"
+#include "util.h"
 
 EntryArray entry_array_create(size_t initial_size)
 {
@@ -52,42 +54,84 @@ void entry_array_destroy(EntryArray *array)
 	free(array->data);
 }
 
+/*
+	TODO: Implement this thing
+void entry_array_print_stats(const EntryArray *array, Date lower, Date upper)
+{
+	if (util_date_compare(lower, upper) == UTIL_DATE_1_LESSER) {
+		printf("Second date must be greater than or equal to the first!");
+		return;
+	}
+
+	if (array->count == 0) {
+		printf("No entries to print stats of!!!\n");
+		return;
+	}
+
+	size_t lower_index;
+	for (lower_index = 0; lower_index < array->count - 1; ++lower_index) {
+		if (util_date_compare(array->data[lower_index].date, lower) == UTIL_DATE_1_GREATER)
+			break;
+	}
+
+	size_t upper_index;
+	for (upper_index = array->count - 1; upper_index > 0; --upper_index) {
+		if (util_date_compare(array->data[upper_index].date, lower) == UTIL_DATE_1_LESSER)
+			break;
+	}
+
+	for (size_t i = lower_index; i <= upper_index; ++i) {
+		
+	}
+}
+*/
+
 int32_t entry_array_get_from_json_file(EntryArray *array, const char *file_name)
 {
 	*array = entry_array_create(1);
 	Entry new_entry;
 
-	json_object *json = json_object_from_file(file_name);
-	if (json == NULL) {
-		fprintf(stderr, "json error: %s", json_util_get_last_err());
+	char *error;
+	Jsimplon_Value *json_root_value = jsimplon_tree_from_file(&error, file_name);
+
+	if (error != NULL) {
+		fprintf(stderr, "json error: %s\n", error);
+		free(error);
 		exit(EXIT_FAILURE);
 	}
-	
-	array_list *json_entry_array = json_object_get_array(json);
-	for (uint32_t i = 0; i < json_entry_array->length; ++i) {
-		json_object *json_entry = array_list_get_idx(json_entry_array, i);
-		json_object *json_temp;
+
+	Jsimplon_Array *json_entry_array = jsimplon_value_get_array(json_root_value);
+	size_t json_entry_array_count = jsimplon_array_get_count(json_entry_array);
+
+	for (size_t i = 0; i < json_entry_array_count; ++i) {
+		Jsimplon_Value *json_entry_value = jsimplon_array_get_value_at_index(json_entry_array, i);
+		Jsimplon_Object *json_entry = jsimplon_value_get_object(json_entry_value);
+
+		Jsimplon_Member *json_temp;
 
 		new_entry = (Entry) { 0 };
 
 		// Date
-		if (!json_object_object_get_ex(json_entry, "year", &json_temp)) {
-			fprintf(stderr, "error: missing year value in entry index %u of the json array\n", i);
+		json_temp = jsimplon_object_get_member(json_entry, "year");
+		if (!json_temp) {
+			fprintf(stderr, "error: missing year value in entry index %lu of the json array\n", i);
 			exit(EXIT_FAILURE);
 		}
-		const int32_t year = json_object_get_int(json_temp);
+		const int32_t year = jsimplon_member_get_number(json_temp);
 
-		if (!json_object_object_get_ex(json_entry, "month", &json_temp)) {
-			fprintf(stderr, "error: missing month value in entry index %u of the json array\n", i);
+		json_temp = jsimplon_object_get_member(json_entry, "month");
+		if (!json_temp) {
+			fprintf(stderr, "error: missing month value in entry index %lu of the json array\n", i);
 			exit(EXIT_FAILURE);
 		}
-		const int32_t month = json_object_get_int(json_temp);
+		const int32_t month = jsimplon_member_get_number(json_temp);
 
-		if (!json_object_object_get_ex(json_entry, "day", &json_temp)) {
-			fprintf(stderr, "error: missing day value in entry index %u of the json array\n", i);
+		json_temp = jsimplon_object_get_member(json_entry, "day");
+		if (!json_temp) {
+			fprintf(stderr, "error: missing day value in entry index %lu of the json array\n", i);
 			exit(EXIT_FAILURE);
 		}
-		const int32_t day = json_object_get_int(json_temp);
+		const int32_t day = jsimplon_member_get_number(json_temp);
 
 		const Date date = {
 			.y = year,
@@ -96,40 +140,43 @@ int32_t entry_array_get_from_json_file(EntryArray *array, const char *file_name)
 		};
 
 		if (!util_date_is_valid(date)) {
-			fprintf(stderr, "error: invalid date in entry index %u of the json array\n", i);
+			fprintf(stderr, "error: invalid date in entry index %zu of the json array\n", i);
 			exit(EXIT_FAILURE);
 		}
 		
 		// Type
-		if (!json_object_object_get_ex(json_entry, "type", &json_temp)) {
-			fprintf(stderr, "error: missing type value in entry index %u of the json array\n", i);
+		json_temp = jsimplon_object_get_member(json_entry, "type");
+		if (!json_temp) {
+			fprintf(stderr, "error: missing type value in entry index %zu of the json array\n", i);
 			exit(EXIT_FAILURE);
 		}
 
-		const int32_t type = json_object_get_int(json_temp);
+		const int32_t type = jsimplon_member_get_number(json_temp);
 		if (type != 0 && type != 1) {
-			fprintf(stderr, "error: invalid type value in entry index %u of the json array (must be 0 or 1)\n", i);
+			fprintf(stderr, "error: invalid type value in entry index %zu of the json array (must be 0 or 1)\n", i);
 			exit(EXIT_FAILURE);
 		}
 
 		// Category
-		if (!json_object_object_get_ex(json_entry, "category", &json_temp)) {
-			fprintf(stderr, "error: missing category value in entry index %u of the json array\n", i);
+		json_temp = jsimplon_object_get_member(json_entry, "category");
+		if (!json_temp) {
+			fprintf(stderr, "error: missing category value in entry index %zu of the json array\n", i);
 			exit(EXIT_FAILURE);
 		}
 
-		const char * const category = json_object_get_string(json_temp);
+		const char * const category = jsimplon_member_get_str(json_temp);
 		if (strlen(category) > ENTRY_CATEGORY_MAX_LEN) {
-			fprintf(stderr, "error: category string length too large in entry index %u of the json_array\n", i);
+			fprintf(stderr, "error: category string length too large in entry index %zu of the json_array\n", i);
 			exit(EXIT_FAILURE);
 		}
 
 		// Amount
-		if (!json_object_object_get_ex(json_entry, "amount", &json_temp)) {
-			fprintf(stderr, "error: missing amount value in entry index %u of the json array\n", i);
+		json_temp = jsimplon_object_get_member(json_entry, "amount");
+		if (!json_temp) {
+			fprintf(stderr, "error: missing amount value in entry index %zu of the json array\n", i);
 			exit(EXIT_FAILURE);
 		}
-		const double amount = json_object_get_double(json_temp);
+		const double amount = jsimplon_member_get_number(json_temp);
 
 		new_entry = (Entry) {
 			.type = type,
@@ -141,35 +188,37 @@ int32_t entry_array_get_from_json_file(EntryArray *array, const char *file_name)
 		entry_array_add(array, new_entry);
 	}
 
-	json_object_put(json);
+	jsimplon_tree_destroy(json_root_value);
 
 	return ENTRY_ARRAY_OPERATION_SUCCESS;
 }
 
 int32_t entry_array_to_json_file(const EntryArray *array, const char *file_name)
 {
-	json_object *json_array_object = json_object_new_array();
+	Jsimplon_Value *json_root_value = jsimplon_tree_root_create();
+	Jsimplon_Array *json_entry_array = jsimplon_value_set_array(json_root_value);
 
-	for (uint32_t i = 0; i < array->count; ++i) {
+	for (size_t i = 0; i < array->count; ++i) {
 		Entry entry = array->data[i];
-		json_object *temp = json_object_new_object();
 
-		json_object_object_add(temp, "year",     json_object_new_int(entry.date.y));
-		json_object_object_add(temp, "month",    json_object_new_int(entry.date.m));
-		json_object_object_add(temp, "day",      json_object_new_int(entry.date.d));
-		json_object_object_add(temp, "type",     json_object_new_int(entry.type));
-		json_object_object_add(temp, "category", json_object_new_string(entry.category));
-		json_object_object_add(temp, "amount",   json_object_new_double(entry.amount));
+		Jsimplon_Object *json_object = jsimplon_array_push_object(json_entry_array);
 
-		json_object_array_add(json_array_object, temp);
+		jsimplon_object_add_member_number(json_object, "year", entry.date.y);
+		jsimplon_object_add_member_number(json_object, "month", entry.date.m);
+		jsimplon_object_add_member_number(json_object, "day", entry.date.d);
+		jsimplon_object_add_member_number(json_object, "type", entry.type);
+		jsimplon_object_add_member_str(json_object, "category", entry.category);
+		jsimplon_object_add_member_number(json_object, "amount", entry.amount);
 	}
 
-	if (json_object_to_file_ext(file_name, json_array_object, JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_PRETTY_TAB) == -1) {
-		fprintf(stderr, "json error: %s\n", json_util_get_last_err());
+	char *error;
+	jsimplon_tree_to_file(&error, json_root_value, file_name);
+	jsimplon_tree_destroy(json_root_value);
+
+	if (error != NULL) {
+		fprintf(stderr, "json error: %s\n", error);
 		return ENTRY_ARRAY_OPERATION_FAILURE;
 	}
-
-	json_object_put(json_array_object);
 
 	return ENTRY_ARRAY_OPERATION_SUCCESS;
 }

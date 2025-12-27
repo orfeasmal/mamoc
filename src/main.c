@@ -7,8 +7,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include <json.h>
-
 #include "util.h"
 #include "entry.h"
 

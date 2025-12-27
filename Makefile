@@ -7,13 +7,13 @@ YELLOW = \033[1;33m
 CC = clang
 LD = clang
 
-CFLAGS =  -std=c11 -Wall -pedantic -Isrc
-CFLAGS += -Ideps/json-c -Ideps/build/json-c
+CFLAGS =  -std=c11 -Wall -Wextra -Wpedantic -Isrc
+CFLAGS += -Ideps/
 
 CFLAGS_DEB = -O0 -g -gdwarf-4 -fsanitize=address
 CFLAGS_REL = -O3
 
-LDFLAGS = -L./deps/build/json-c/ -ljson-c -lm
+LDFLAGS =
 
 LDFLAGS_DEB = -fsanitize=address
 
@@ -28,13 +28,20 @@ OBJ_REL     = $(patsubst src/%.c, $(OBJ_REL_DIR)/%.o, $(SRC))
 EXE_REL = build/release/mamoc
 EXE_DEB = build/debug/mamoc
 
-.PHONY: debug release run clean deps depsclean
+.PHONY: run clean
 
-debug: $(OBJ_DEB)
+debug: $(EXE_DEB)
+release: $(EXE_REL)
+
+run: debug
+	@ echo -e "$(CYAN)EXECUTING$(NC) $(EXE_DEB)"
+	@ ./$(EXE_DEB)
+
+$(EXE_DEB): $(OBJ_DEB)
 	@ echo -e "$(GREEN)LINKING EXECUTABLE$(NC) $(EXE_DEB)"
 	@ $(LD) $(OBJ_DEB) -o $(EXE_DEB) $(LDFLAGS) $(LDFLAGS_DEB)
 
-release: $(OBJ_REL)
+$(EXE_REL): $(OBJ_REL)
 	@ echo -e "$(GREEN)LINKING EXECUTABLE$(NC) $(EXE_REL)"
 	@ $(LD) $(OBJ_REL) -o $(EXE_REL) $(LDFLAGS)
 
@@ -48,19 +55,6 @@ $(OBJ_DEB_DIR)/%.o: src/%.c
 	@ echo -e "$(GREEN)COMPILING OBJECT$(NC) $@"
 	@ $(CC) $(CFLAGS) $(CFLAGS_DEB) -c $< -o $@
 
-run: debug
-	@ echo -e "$(CYAN)EXECUTING$(NC) $(EXE_DEB)"
-	@ ./$(EXE_DEB)
-
 clean:
 	@ echo -e "$(YELLOW)CLEANING PROJECT$(NC)"
 	@ rm -rf build
-
-deps:
-	@ echo -e "$(CYAN)UPDATING SUBMODULES$(NC)"        && git submodule update --init --recursive --depth=1
-	@ echo -e "$(BLUE)BUILDING DEPENDENCY$(NC) json-c" && cd deps && mkdir -p build/json-c && cd build/json-c && \
-	cmake ../../json-c && cmake --build . --config Release && make -j4
-
-depsclean:
-	@ echo -e "$(YELLOW)CLEANING DEPENDENCIES$(NC)"
-	@ rm -rf deps/build

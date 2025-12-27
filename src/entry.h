@@ -5,8 +5,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <json.h>
-
 #include "util.h"
 
 #define ENTRY_CATEGORY_MAX_LEN 1024
@@ -47,6 +45,8 @@ EntryArray entry_array_create(size_t initial_size);
 void       entry_array_add(EntryArray *array, Entry entry); // automatically sorts
 uint8_t    entry_array_remove(EntryArray *array, size_t i);
 void       entry_array_destroy(EntryArray *array);
+
+void entry_array_print_stats(const EntryArray *array, Date lower, Date upper);
 
 int32_t entry_array_get_from_json_file(EntryArray *dest, const char *file_name); // assumes entry array is initialised
 int32_t entry_array_to_json_file(const EntryArray *array, const char *file_name);
